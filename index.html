@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="A chat room demo using Polymer 1.x and PubNub">
+  <meta name="author" content="Tomomi Imura  @girlie_mac">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Kitteh Anonymous Chat</title>
+
+  <!-- Chrome for Android theme color -->
+  <meta name="theme-color" content="#00BCD4">
+
+    <!-- Tile color for Win8 -->
+  <meta name="msapplication-TileColor" content="#00BCD4">
+
+  <!-- Add to homescreen for Chrome on Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="PSK">
+  <link rel="icon" sizes="192x192" href="images/app-icon-192.png">
+
+  <!-- Add to homescreen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Polymer Starter Kit">
+  <link rel="apple-touch-icon" sizes="128x128" href="images/app-icon-128.png">
+
+  <!-- More icons -->
+  <link rel="icon" sizes="192x192" href="images/app-icon-192.png">
+  <link rel="icon" sizes="128x128" href="images/app-icon-128.png">
+  <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
+
+  <!-- Polyfill Web Components support for older browsers -->
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+
+  <!-- Polymer Elelments: will be replaced with elements/elements.vulcanized.html -->
+  <link rel="import" href="elements/elements.html">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <style is="custom-style">
+    /* Polymer elelments custom styles must be defined here */
+    paper-input {
+      padding-right: 10px;
+      --paper-input-container-focus-color: #F44336; /* red */
+    }
+    paper-toolbar {
+      --paper-toolbar-background: #00BCD4; /* cyan */
+      --paper-toolbar: {
+        font-size: 1.2em; 
+      };
+    }
+  </style>
+  
+</head>
+
+<body unresolved class="fullbleed layout vertical">
+
+  <poly-chat> </poly-chat>  
+</body>
+</html>
