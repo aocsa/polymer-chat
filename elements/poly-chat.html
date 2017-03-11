@@ -2,15 +2,7 @@
 <dom-module id="poly-chat">
 
 
-	 <template>
-
-	    <!-- Use your own publish_key and subscribe_key please!  --> 
-	    <core-pubnub publish_key="pub-c-156a6d5f-22bd-4a13-848d-b5b4d4b36695" subscribe_key="sub-c-f762fb78-2724-11e4-a4df-02ee2ddab7fe" uuid="{{uuid}}">
-	      <core-pubnub-subscribe channel="polymer-chat" id="sub" on-callback="subscribeCallback" on-presence="presenceChanged" on-error="{{error}}">
-	        <core-pubnub-publish channel="polymer-chat" message="" id="pub" on-error="{{error}}"></core-pubnub-publish>
-	        <core-pubnub-history channel="polymer-chat" count="30" on-success="historyRetrieved" on-error="{{error}}"></core-pubnub-history>
-	      </core-pubnub-subscribe>
-	    </core-pubnub>
+	 <template> 
 
 	  <!-- Drawer Panel (Left Column) -->
 	  <paper-drawer-panel id="drawerPanel">
@@ -53,6 +45,13 @@
 	          <paper-input class="flex" label="Type message..." id="input" value="{{input}}" on-keyup="checkKey"></paper-input>
 	          <paper-fab icon="send" id="sendButton" on-tap="sendMyMessage"></paper-fab>
 	        </div>
+
+					<div class="send-message layout horizontal">
+	          <paper-input class="flex" label="Type message..." id="input" value="{{input}}" on-keyup="checkKey"></paper-input>
+	         	          <paper-input class="flex" label="Type message..." id="input" value="{{input}}" on-keyup="checkKey"></paper-input>
+
+				 <paper-fab icon="send" id="sendButton" on-tap="sendMyMessage"></paper-fab>
+	        </div>
 	      </div>
 	    </paper-header-panel>
 	  </paper-drawer-panel>
@@ -76,29 +75,71 @@
 				    template: Object,
 				    pastMsgs: [],
 				    cats : [],
+						pubnub : Object, 
+						channel: {
+							type: Object,
+							value: 'polymer-chat',
+							notify: true,
+							observer: '_changeChannel'
+          },
 
+				},
+				_changeChannel : function () {
+						console.log('event!!');
 				},
 				ready: function() {
 				  // Assign a uuid made of a random cat and a random color
-				 
+							this.color = this.randomColor();
+							this.cat = this.randomCat();
+							this.uuid = this.color + '-' + this.cat;
+							this.avatar = 'images/' + this.cat + '.jpg';
+							this.pastMsgs = [];
+							this.cats = []; 
+							this.template = document.querySelector('poly-chat');
+							///////////////
+ 	  					this.pubnub = new PubNub({ publishKey : 'pub-c-467437f5-5346-4f8c-9ddf-2de1c90a93c8', subscribeKey : 'sub-c-52679430-efef-11e6-b753-0619f8945a4f' });
+					 
+ 							this.pubnub.addListener({
+								 message: function(message) {
+									// handle message
+									 var polymerObj = document.querySelector('poly-chat');
+										polymerObj.subscribeCallback(message);	  
+									},
+									presence: function(presenceEvent) {
+											// handle presence
+											var polymerObj = document.querySelector('poly-chat');
+											polymerObj.presenceChanged(presenceEvent);
+									}
+							});
+							this.pubnub.history( {
+											channel: this.channel,
+											reverse: true, // Setting to true will traverse the time line in reverse starting with the oldest message first.
+											count: 30, // how many items to fetch
+											stringifiedTimeToken: true, // false is the default 
+									},									 
+									function (status, response) {
+												 var polymerObj = document.querySelector('poly-chat');
+											   if(response.messages.length > 0) {
+													polymerObj.pastMsgs = polymerObj.getListWithOnlineStatus(response.messages);
+													polymerObj.displayChatList(polymerObj.pastMsgs);
+												}
+									}
+							);
+     				  this.pubnub.subscribe({
+								 channels:[this.channel],
+							 	 withPresence: true
+							 });
+							///////////////
 
-				  this.color = this.randomColor();
-				  this.cat = this.randomCat();
-				  this.uuid = this.color + '-' + this.cat;
-				  this.avatar = 'images/' + this.cat + '.jpg';
-				  this.template = document.querySelector('poly-chat');
-				  this.pastMsgs = [];
-				  this.cats = [];
+							this.template.channel = this.channel;
+							this.template.uuid = this.uuid;
+							this.template.avatar = this.avatar;
+							this.template.color = this.color;
+							this.template.cats = [];
+							this.template.messageList = [];
 
-				 	  this.template.channel = 'polymer-chat';
-					  this.template.uuid = this.uuid;
-					  this.template.avatar = this.avatar;
-					  this.template.color = this.color;
-					  this.template.cats = [];
-					   this.template.messageList = [];
-
-		        },
-	            randomColor : function() {
+					},
+					randomColor : function() {
 			    	var colors = ['navy', 'slate', 'olive', 'moss', 'chocolate', 'buttercup', 'maroon', 'cerise', 'plum', 'orchid'];
 				    return colors[(Math.random() * colors.length) >>> 0];
 				  },
@@ -107,19 +148,21 @@
 				    var cats = ['tabby', 'bengal', 'persian', 'mainecoon', 'ragdoll', 'sphynx', 'siamese', 'korat', 'japanesebobtail', 'abyssinian', 'scottishfold'];
 				    return cats[(Math.random() * cats.length) >>> 0];
 				  },
-		        checkKey : function(e) {
-		          if(e.keyCode === 13 || e.charCode === 13) {
-		            this.publish();
-		          }
-		        },
-		        // Sending a chat message by clicking a "Send" button
-		        sendMyMessage : function(e) {
-		          this.publish();
-		        }, 
+					checkKey : function(e) {
+						if(e.keyCode === 13 || e.charCode === 13) {
+							this.publish();
+						}
+					},
+					// Sending a chat message by clicking a "Send" button
+					sendMyMessage : function(e) {
+						this.publish();
+					}, 
 
 			  getListWithOnlineStatus : function(list) {
 			    for (var i = 0; i < list.length; i++) {
-			      var l = list[i];
+						if(list[i].entry)
+				      list[i] = list[i].entry;
+						var l = list[i];
 			      // sanitize avatars
 			      var catName = (l.uuid + '').split('-')[1];
 			      l.avatar = 'images/' + catName + '.jpg';
@@ -156,16 +199,17 @@
 			      this.showNewest() ;
 			  },
 
-			  subscribeCallback : function(e) {
-			    if(this.template.$.sub.messages.length > 0) { console.log(this.template.$.sub.messages);
-			        this.displayChatList(this.pastMsgs.concat(this.getListWithOnlineStatus(this.template.$.sub.messages)));
+			  subscribeCallback : function(o) {
+			    if(o.message) {
+							 console.log(o.message);
+			        this.displayChatList(this.pastMsgs.concat(this.getListWithOnlineStatus( [o.message] )));
 			    }
 			  },
 
 			  presenceChanged : function(e) {
 			    var i = 0;
-			    var l = this.template.$.sub.presence.length;
-			    var d = this.template.$.sub.presence[l - 1];
+			    var l = 1;
+			    var d = e;
 
 			    // how many users
 			    this.template.occupancy = d.occupancy;
@@ -201,16 +245,20 @@
 			  },
 
 			  publish : function() {
-			    if(!this.template.input) return;
+			    if(!this.template.input) 
+						return;
 
-			    this.template.$.pub.message = {
-			      uuid: this.uuid,
-			      avatar: this.avatar,
-			      color: this.color,
-			      text: this.template.input,
-			      timestamp: new Date().toISOString()
-			    };
-			    this.template.$.pub.publish();
+			  
+			    this.pubnub.publish(  { 
+						message: {
+								 uuid: this.uuid,
+								avatar: this.avatar,
+								color: this.color,
+								text: this.template.input,
+								timestamp: new Date().toISOString()
+						},
+						channel: this.channel
+					});
 			    this.template.input = '';
 			  },
 
